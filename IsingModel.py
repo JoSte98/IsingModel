@@ -4,6 +4,9 @@ Simulation class of a 2D Ising Model via Monte Carlo integration.
 @author: Magdalena and Johannes
 """
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 class IsingModel:
 
     def __init__(self, temperature, length=50, init_type='up'):
@@ -17,6 +20,12 @@ class IsingModel:
         self.temperature = temperature
         self.length = int(length)
         self.initialize_state(init_type=init_type)
+
+        self.magnetizations = []
+        self.magnetizations.append(self.magnetization())
+
+        self.energies = []
+        self.energies.append(self.energy(self.state))
 
     def initialize_state(self, init_type):
         """
@@ -83,7 +92,7 @@ class IsingModel:
         :return: Probability as float.
         """
 
-        return np.exp(-self.energy(state))
+        return min(np.exp(-self.energy(state)), 1000)
 
     def magnetization(self):
         """
@@ -95,6 +104,105 @@ class IsingModel:
         M = 1/(self.length**2) * np.sum(self.state)
 
         return M
+
+    def evolve(self):
+        """
+
+        :return:
+        """
+        new_state = self.new_state()
+        new_state_energy = self.energy(new_state)
+
+        if (self.energies[-1] > new_state_energy):
+            self.state = new_state
+            self.energies.append(new_state_energy)
+        else:
+            p = self.probability(self.state)/self.probability(new_state)
+            t = np.random.random()
+            if (t<p): # accept the new state
+                self.state = new_state
+                self.energies.append(new_state_energy)
+
+        return 0
+
+    def simulation_unit(self):
+        """
+
+        :return:
+        """
+        for i in range(self.length**2):
+            self.evolve()
+
+        self.magnetizations.append(self.magnetization())
+
+        return 0
+
+    def simulate(self, num_repitions, plot=True):
+        """
+
+        :param num_repitions:
+        :return:
+        """
+        for i in range(num_repitions):
+            self.simulation_unit()
+
+        self.save_magnetization()
+        if (plot == True):
+            self.plot_magnetization()
+
+        return 0
+
+    def plot_magnetization(self):
+        fig, ax = plt.subplots()
+
+        x_range = range(len(self.magnetizations))
+        ax.scatter(x_range, self.magnetizations, linewidths=2.0)
+
+        ax.set_xlabel("Measurement", fontsize=18)
+        ax.set_ylabel("Average Magnetization", fontsize=18)
+
+        ax.set_xticks(x_range)
+
+        ax.set_title("Result Measurements Markov Chain", fontsize=20)
+
+        plt.show()
+
+    def save_magnetization(self):
+        """
+
+        :return:
+        """
+        num_repetitions = len(self.magnetizations)
+        name_of_file = "magn_" + str(self.temperature).replace(".", "") + "_size_" + str(int(self.length)) + ".txt"
+        with open(name_of_file, "w") as file:
+            file.write("%f %d %d\n" % (self.temperature, num_repetitions, self.length))
+            for i in range(num_repetitions):
+                file.write("%f " % self.magnetizations[i])
+                file.write("\n")
+
+        return 0
+
+    def plot_energies(self):
+        """
+
+        :return:
+        """
+        fig, ax = plt.subplots()
+
+        x_range = range(len(self.energies))
+        ax.scatter(x_range, self.energies, linewidths=2.0)
+
+        ax.set_xlabel("Measurement", fontsize=18)
+        ax.set_ylabel("Energy", fontsize=18)
+
+        ax.set_xticks(x_range)
+
+        ax.set_title("Result Measurements Markov Chain", fontsize=20)
+
+        plt.show()
+
+
+
 
 
 
