@@ -84,7 +84,7 @@ class IsingModel:
 
         return energy
 
-    def probability(self, state):
+    def probability(self, energy):
         """
         Calculates the probability of a state in the Ising system.
 
@@ -92,7 +92,7 @@ class IsingModel:
         :return: Probability as float.
         """
 
-        return min(np.exp(-self.energy(state)), 1000)
+        return np.exp(-energy)
 
     def magnetization(self):
         """
@@ -114,14 +114,19 @@ class IsingModel:
         new_state_energy = self.energy(new_state)
 
         if (self.energies[-1] > new_state_energy):
+            #print("rovnou jedem")
             self.state = new_state
             self.energies.append(new_state_energy)
         else:
-            p = self.probability(self.state)/self.probability(new_state)
+            p = self.probability(-self.energies[-1]+new_state_energy)
             t = np.random.random()
+            #print("mensi energie")
+            #print(p)
+            #print(t)
             if (t<p): # accept the new state
                 self.state = new_state
                 self.energies.append(new_state_energy)
+                #print("yep, vybráno")
 
         return 0
 
