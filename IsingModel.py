@@ -43,11 +43,19 @@ class IsingModel:
             self.state *= -1
             return 0
         elif init_type == 'random':
-            order = np.random.choices([-1, 1], k=int(self.length**2))
+            order = np.random.choice([-1, 1], size=int(self.length**2))
             for i in range(self.length):
                 for j in range(self.length):
                     self.state[i, j] = order[self.length*i + j]
+            self.plot_state()
             return 0
+        elif init_type == 'half-up-half-down':
+            for i in range(self.length):
+                for j in range(self.length/2):
+                    self.state[i,j] *= -1
+            return 0
+        else: 
+            print("This initial state is not known.")
 
     def new_state(self):
         """
@@ -206,6 +214,17 @@ class IsingModel:
 
         plt.show()
 
+    def plot_state(self):
+        """
+
+        :return:
+        """
+        fig, ax = plt.subplots()
+        ax.imshow(self.state)
+        plt.show()
+        return 0
+        
+        
 
 
 
