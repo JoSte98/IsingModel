@@ -14,19 +14,19 @@ def main():
     """
     from IsingModel import IsingModel
 
-    model = IsingModel(temperature=3, length=20,init_type='up')
-    model.simulate(60)
-    model.plot_state()
+    model = IsingModel(temperature=1, length=10,init_type='random')
+    model.simulate(20)
+    #model.plot_state()
     model.plot_energies()
 
     """for T in np.arange(1, 4, 0.2):
         model = IsingModel(temperature=T, length=20, init_type='random')
         model.simulate(50, plot=False)
     
-        save_temp_magn(T, model.magnetizations[-1], NAME_PHASE_FILE)
+        save_temp_magn(T, model.magnetizations[-1], NAME_PHASE_FILE)"""
 
 
-    plot_phase_diagram(NAME_PHASE_FILE)"""
+    #plot_phase_diagram(NAME_PHASE_FILE)
 
 
     return 0

@@ -127,6 +127,7 @@ class IsingModel:
             self.energies.append(new_state_energy)
         else:
             p = self.probability(-self.energies[-1]+new_state_energy)
+            print(p)
             t = np.random.random()
             #print("mensi energie")
             #print(p)
@@ -203,7 +204,7 @@ class IsingModel:
         fig, ax = plt.subplots()
 
         x_range = range(len(self.energies))
-        ax.scatter(x_range, self.energies, linewidths=2.0)
+        ax.plot(x_range, self.energies, linewidth=1.0)
 
         ax.set_xlabel("Measurement", fontsize=18)
         ax.set_ylabel("Energy", fontsize=18)
