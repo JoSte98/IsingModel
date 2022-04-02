@@ -9,26 +9,26 @@ import matplotlib.pyplot as plt
 
 class IsingModel:
 
-    def __init__(self, temperature, length=50, init_type='up'):
+    def __init__(self, temperature, length=50, init_type='up', equilibrate_steps=100):
         """
         Constructor of the Ising Model class.
 
         :param temperature: Dimensionless temperature in units of the coupling constant J.
         :param length: Number of spins in the 1D chain. The grid will be of dimension length^2.
         :param init_type: From {'up', 'down', 'random'}. Type of the initialization of the 2D spin grid.
+        :param equilibrate_steps: Number of weeps to equilibrate the system.
         """
         self.temperature = temperature
         self.length = int(length)
         self.initialize_state(init_type=init_type)
 
         self.magnetizations = []
-        self.magnetizations.append(self.magnetization())
-
         self.energies = []
-        self.energies.append(self.energy(self.state))
         
         self.p_4J = self.probability(4)
         self.p_8J = self.probability(8)
+
+        self.equilibrate(equilibrate_steps)
 
     def initialize_state(self, init_type):
         """
@@ -60,6 +60,52 @@ class IsingModel:
         else: 
             print("This initial state is not known.")
 
+    def equilibrate(self, equilibrate_steps):
+        """
+
+        :param equilibrate_steps:
+        :return: 0 if successful
+        """
+        for i in range(equilibrate_steps):
+            self.simulation_unit(save=False)
+        return 0
+
+    def measure_corr_time(self, t_max, plot=False):
+        """
+
+        :param t_max:
+        :return:
+        """
+        for t in range(t_max):
+            self.simulation_unit()
+
+        chi = np.zeros(t_max)
+        for t in range(t_max):
+            m_t_tp = np.array(self.magnetizations[t:t_max])
+            m_tp = np.array(self.magnetizations[0: (t_max-t)])
+
+            chi[t] = 1/(t_max - t) * (np.sum(m_tp*m_t_tp) - 1/(t_max - t) * np.sum(m_tp)*np.sum(m_tp))
+
+        if plot==True:
+            fig, ax = plt.subplots()
+
+            ax.scatter(range(t_max), chi/chi[0], linewidths=1.5, c="r", label="Measurement")
+
+            ax.set_xlabel(r"$t$", fontsize=18)
+            ax.set_ylabel(r"$\chi(t)$", fontsize=18)
+
+            ax.legend(loc="best", fontsize=16)
+            ax.grid(visible=True)
+
+        self.tau = 0
+        for t in range(t_max):
+            if chi[t] < 0:
+                break
+            self.tau += chi[t]
+        self.tau /= chi[0]
+
+        return 0
+
     def new_state(self):
         """
         Creates out of the current state a new one via flipping a random spin.
@@ -71,7 +117,9 @@ class IsingModel:
 
         new_state = self.state.copy()
         
-        dE = self.state[flip_spin_x, (flip_spin_y+1)%self.length] + self.state[flip_spin_x, (flip_spin_y-1)%self.length] + self.state[(flip_spin_x+1)%self.length, flip_spin_y] + self.state[(flip_spin_x-1)%self.length, flip_spin_y]
+        dE = (self.state[flip_spin_x, (flip_spin_y+1)%self.length] + self.state[flip_spin_x, (flip_spin_y-1)%self.length]\
+             + self.state[(flip_spin_x+1)%self.length, flip_spin_y] + self.state[(flip_spin_x-1)%self.length, flip_spin_y])\
+             * self.state[flip_spin_x, flip_spin_y]
         #print(dE)
         new_state[flip_spin_x, flip_spin_y] *= -1
         
@@ -149,16 +197,17 @@ class IsingModel:
 
         return 0
 
-    def simulation_unit(self):
+    def simulation_unit(self, save=True):
         """
 
         :return:
         """
         for i in range(self.length**2):
             self.evolve()
-            
-        self.energies.append(self.energy(self.state))
-        self.magnetizations.append(self.magnetization())
+
+        if save:
+            self.energies.append(self.energy(self.state))
+            self.magnetizations.append(self.magnetization())
 
         return 0
 
