@@ -14,8 +14,8 @@ def main():
     """
     from IsingModel import IsingModel
 
-    model = IsingModel(temperature=1, length=10,init_type='random')
-    model.simulate(20)
+    model = IsingModel(temperature=0.5, length=10,init_type='random')
+    model.simulate(200)
     #model.plot_state()
     model.plot_energies()
 
@@ -23,10 +23,10 @@ def main():
         model = IsingModel(temperature=T, length=20, init_type='random')
         model.simulate(50, plot=False)
     
-        save_temp_magn(T, model.magnetizations[-1], NAME_PHASE_FILE)"""
+        save_temp_magn(T, model.magnetizations[-1], NAME_PHASE_FILE)
 
 
-    #plot_phase_diagram(NAME_PHASE_FILE)
+    plot_phase_diagram(NAME_PHASE_FILE)"""
 
 
     return 0

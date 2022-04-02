@@ -26,6 +26,9 @@ class IsingModel:
 
         self.energies = []
         self.energies.append(self.energy(self.state))
+        
+        self.p_4J = self.probability(4)
+        self.p_8J = self.probability(8)
 
     def initialize_state(self, init_type):
         """
@@ -47,7 +50,7 @@ class IsingModel:
             for i in range(self.length):
                 for j in range(self.length):
                     self.state[i, j] = order[self.length*i + j]
-            self.plot_state()
+            #self.plot_state()
             return 0
         elif init_type == 'half-up-half-down':
             for i in range(self.length):
@@ -63,14 +66,17 @@ class IsingModel:
 
         :return: New state.
         """
-        flip_spin_x = np.random.randint(0, self.length-1)
-        flip_spin_y = np.random.randint(0, self.length-1)
+        flip_spin_x = np.random.randint(0, self.length)
+        flip_spin_y = np.random.randint(0, self.length)
 
         new_state = self.state.copy()
-
+        
+        dE = self.state[flip_spin_x, (flip_spin_y+1)%self.length] + self.state[flip_spin_x, (flip_spin_y-1)%self.length] + self.state[(flip_spin_x+1)%self.length, flip_spin_y] + self.state[(flip_spin_x-1)%self.length, flip_spin_y]
+        #print(dE)
         new_state[flip_spin_x, flip_spin_y] *= -1
+        
 
-        return new_state
+        return new_state, dE
 
     def energy(self, state):
         """
@@ -88,7 +94,7 @@ class IsingModel:
                 # top and bottom neighbor
                 energy -= state[i, j]*(state[(i+1)%self.length, j] + state[(i-1)%self.length, j])
 
-        energy *= 0.5/self.temperature
+        energy *= 0.5
 
         return energy
 
@@ -100,7 +106,7 @@ class IsingModel:
         :return: Probability as float.
         """
 
-        return np.exp(-energy)
+        return np.exp(-energy/self.temperature)
 
     def magnetization(self):
         """
@@ -118,24 +124,28 @@ class IsingModel:
 
         :return:
         """
-        new_state = self.new_state()
-        new_state_energy = self.energy(new_state)
+        new_state , dE = self.new_state()
+        #new_state_energy = self.energies[-1]+2*dE
 
-        if (self.energies[-1] > new_state_energy):
-            #print("rovnou jedem")
+        if dE<0:
+            #print("right away")
             self.state = new_state
-            self.energies.append(new_state_energy)
+            #self.energies.append(new_state_energy)
+            #print("tried")
         else:
-            p = self.probability(-self.energies[-1]+new_state_energy)
-            print(p)
+            if (abs(dE-4.00)<10e-8):
+                p = self.p_8J
+                #print(p)
+            else:
+                p = self.p_4J
+                #print(p)
             t = np.random.random()
-            #print("mensi energie")
-            #print(p)
-            #print(t)
             if (t<p): # accept the new state
                 self.state = new_state
-                self.energies.append(new_state_energy)
-                #print("yep, vybráno")
+                #self.energies.append(new_state_energy)
+                #print("accepted")
+
+            
 
         return 0
 
@@ -146,7 +156,8 @@ class IsingModel:
         """
         for i in range(self.length**2):
             self.evolve()
-
+            
+        self.energies.append(self.energy(self.state))
         self.magnetizations.append(self.magnetization())
 
         return 0
