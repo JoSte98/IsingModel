@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 class IsingModel:
 
-    def __init__(self, temperature, length=50, init_type='up', equilibrate_steps=100):
+    def __init__(self, temperature, length=50, init_type='up', equilibrate_steps=200):
         """
         Constructor of the Ising Model class.
 
@@ -84,7 +84,7 @@ class IsingModel:
             m_t_tp = np.array(self.magnetizations[t:t_max])
             m_tp = np.array(self.magnetizations[0: (t_max-t)])
 
-            chi[t] = 1/(t_max - t) * (np.sum(m_tp*m_t_tp) - 1/(t_max - t) * np.sum(m_tp)*np.sum(m_tp))
+            chi[t] = 1/(t_max - t) * (np.sum(m_tp*m_t_tp) - 1/(t_max - t) * np.sum(m_tp)*np.sum(m_t_tp))
 
         if plot==True:
             fig, ax = plt.subplots()
@@ -175,7 +175,7 @@ class IsingModel:
         new_state , dE = self.new_state()
         #new_state_energy = self.energies[-1]+2*dE
 
-        if dE<0:
+        if dE<=0:
             #print("right away")
             self.state = new_state
             #self.energies.append(new_state_energy)
