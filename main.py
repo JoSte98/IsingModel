@@ -20,7 +20,7 @@ def main():
 
     for T in np.arange(1, 4.01, 0.2):
         T = np.round(T, 2)
-        model = IsingModel(temperature=T, length=50, init_type='close_to_opt')
+        model = IsingModel(temperature=T, length=20, init_type='close_to_opt')
 
         model.measure_stat_prop(800, 10, plot=False)
 

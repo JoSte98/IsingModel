@@ -126,7 +126,7 @@ class IsingModel:
         """
         self.measure_corr_time(t_max, plot)
 
-        tau = min(100, self.tau)
+        tau = min(200, self.tau)
 
         N = max(0, 16*tau - t_max)
         N = int(N)
@@ -141,7 +141,7 @@ class IsingModel:
 
         self.final_susceptibility = np.mean(self.susceptibilities)
         self.final_specific_heat = np.mean(self.specific_heats)
-        self.final_magnetization = np.mean(self.magnetizations)
+        self.final_magnetization = np.mean(np.absolute(self.magnetizations))
         self.final_energy = np.mean(self.energies)
 
         self.final_susceptibility_sigma = np.sqrt( 2*tau/(num_boxes*t_max) *
@@ -166,7 +166,7 @@ class IsingModel:
         :return:
         """
 
-        return 1/self.temperature * (np.sum(np.array(m)**2) - np.sum(np.array(m))**2)
+        return 1/self.temperature * (np.mean(np.array(m)**2) - np.mean(np.array(m))**2) *self.length**2
 
     def specific_heat(self, E):
         """
@@ -174,7 +174,7 @@ class IsingModel:
         :param E:
         :return:
         """
-        return 1/(self.length**2 * self.temperature**2) * (np.sum(np.array(E)**2) - np.sum(np.array(E))**2)
+        return 1/(self.length**2 * self.temperature**2) * (np.mean(np.array(E)**2) - np.mean(np.array(E))**2)
 
     def new_state(self):
         """
