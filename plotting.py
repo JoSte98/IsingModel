@@ -27,9 +27,10 @@ def plot_phase_diagram(name_of_file):
     fig, ax = plt.subplots()
 
     ax.errorbar(temperatures, magnetizations, yerr=sigmas, fmt='ro', label="Measurement")
-    t_range_l = np.linspace(temperatures[0], 2.269, 1000)
+    t_range_l = np.linspace(0.1, 2.269, 1000)
     t_range_h = np.linspace(2.269, temperatures[-1], 1000)
-    ax.plot(t_range_l, (1 - t_range_l/2.269)**(1/8), lw=2.0, label="Theory")
+    ax.plot(t_range_l, (1 - t_range_l/2.269)**(1/8), lw=2.0, label=r'Phenomenological scaling with $\beta=1/8$',c="b")
+    ax.plot(t_range_l, (1 - 1/(np.sinh(2/t_range_l)**4))**(1/8), lw=2.0, label="Exact Onsager solution",c="orange")
     ax.plot(t_range_h, np.zeros(len(t_range_h)), lw=2.0, c="b")
 
     ax.set_xlim((0.0, temperatures[-1] + 0.2))
