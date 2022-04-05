@@ -24,6 +24,8 @@ class IsingModel:
 
         self.magnetizations = []
         self.energies = []
+        self.susceptibilities = []
+        self.specific_heats = []
         
         self.p_4J = self.probability(4)
         self.p_8J = self.probability(8)
@@ -44,6 +46,18 @@ class IsingModel:
             return 0
         elif init_type == 'down':
             self.state *= -1
+            return 0
+        elif init_type == "close_to_opt":
+            # theoretical expected amount of ups to be flipped for perfect magnetization
+            if self.temperature < 2.369:
+                N = int(((1 - (1 - self.temperature/2.369)**(1/8))/2) * self.length**2)
+            else:
+                N = int(self.length**2/2)
+            print(N/self.length**2)
+            for i in range(N):
+                flip_spin_x = np.random.randint(0, self.length)
+                flip_spin_y = np.random.randint(0, self.length)
+                self.state[flip_spin_x, flip_spin_y] *= -1
             return 0
         elif init_type == 'random':
             order = np.random.choice([-1, 1], size=int(self.length**2))
@@ -105,6 +119,62 @@ class IsingModel:
         self.tau /= chi[0]
 
         return 0
+
+    def measure_stat_prop(self, t_max, num_boxes, plot=False):
+        """
+        :return:
+        """
+        self.measure_corr_time(t_max, plot)
+
+        tau = min(100, self.tau)
+
+        N = max(0, 16*tau - t_max)
+        N = int(N)
+        self.simulate(N, plot=False)
+        self.susceptibilities.append(self.susceptibility(self.magnetizations))
+        self.specific_heats.append(self.specific_heat(self.energies))
+
+        for i in range(num_boxes - 1):
+            self.simulate(int(16*tau), plot=False)
+            self.susceptibilities.append(self.susceptibility(self.magnetizations[-int(16*tau):]))
+            self.specific_heats.append(self.specific_heat(self.energies[-int(16*tau):]))
+
+        self.final_susceptibility = np.mean(self.susceptibilities)
+        self.final_specific_heat = np.mean(self.specific_heats)
+        self.final_magnetization = np.mean(self.magnetizations)
+        self.final_energy = np.mean(self.energies)
+
+        self.final_susceptibility_sigma = np.sqrt( 2*tau/(num_boxes*t_max) *
+                                                   ( np.mean(np.array(self.susceptibilities)**2) -
+                                                     np.mean(np.array(self.susceptibilities))**2 ) )
+        self.final_specific_heat_sigma = np.sqrt( 2*tau/(num_boxes*t_max) *
+                                                   ( np.mean(np.array(self.specific_heats)**2) -
+                                                     np.mean(np.array(self.specific_heats))**2 ) )
+        self.final_magnetization_sigma = np.sqrt( 2*tau/(num_boxes*t_max) *
+                                                   ( np.mean(np.array(self.magnetizations)**2) -
+                                                     np.mean(np.array(self.magnetizations))**2 ) )
+        self.final_energy_sigma = np.sqrt( 2*tau/(num_boxes*t_max) *
+                                                   ( np.mean(np.array(self.energies)**2) -
+                                                     np.mean(np.array(self.energies))**2 ) )
+
+        return 0
+
+    def susceptibility(self, m):
+        """
+
+        :param m:
+        :return:
+        """
+
+        return 1/self.temperature * (np.sum(np.array(m)**2) - np.sum(np.array(m))**2)
+
+    def specific_heat(self, E):
+        """
+
+        :param E:
+        :return:
+        """
+        return 1/(self.length**2 * self.temperature**2) * (np.sum(np.array(E)**2) - np.sum(np.array(E))**2)
 
     def new_state(self):
         """
@@ -211,13 +281,13 @@ class IsingModel:
 
         return 0
 
-    def simulate(self, num_repitions, plot=True):
+    def simulate(self, num_repetitions, plot=True):
         """
 
-        :param num_repitions:
+        :param num_repetitions:
         :return:
         """
-        for i in range(num_repitions):
+        for i in range(num_repetitions):
             self.simulation_unit()
 
         self.save_magnetization()
