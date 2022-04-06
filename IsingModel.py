@@ -142,20 +142,18 @@ class IsingModel:
         self.final_susceptibility = np.mean(self.susceptibilities)
         self.final_specific_heat = np.mean(self.specific_heats)
         self.final_magnetization = np.mean(np.absolute(self.magnetizations))
-        self.final_energy = np.mean(self.energies)
+        self.final_energy = np.mean(self.energies)/self.length**2
 
-        self.final_susceptibility_sigma = np.sqrt( 2*tau/(num_boxes*t_max) *
-                                                   ( np.mean(np.array(self.susceptibilities)**2) -
+        self.final_susceptibility_sigma = np.sqrt( ( np.mean(np.array(self.susceptibilities)**2) -
                                                      np.mean(np.array(self.susceptibilities))**2 ) )
-        self.final_specific_heat_sigma = np.sqrt( 2*tau/(num_boxes*t_max) *
-                                                   ( np.mean(np.array(self.specific_heats)**2) -
+        self.final_specific_heat_sigma = np.sqrt( ( np.mean(np.array(self.specific_heats)**2) -
                                                      np.mean(np.array(self.specific_heats))**2 ) )
-        self.final_magnetization_sigma = np.sqrt( 2*tau/(num_boxes*t_max) *
+        self.final_magnetization_sigma = np.sqrt( 2*tau/(t_max + N + (num_boxes - 1)*16*tau) *
                                                    ( np.mean(np.array(self.magnetizations)**2) -
                                                      np.mean(np.array(self.magnetizations))**2 ) )
-        self.final_energy_sigma = np.sqrt( 2*tau/(num_boxes*t_max) *
+        self.final_energy_sigma = np.sqrt( 2*tau/(t_max + N + (num_boxes - 1)*16*tau) *
                                                    ( np.mean(np.array(self.energies)**2) -
-                                                     np.mean(np.array(self.energies))**2 ) )
+                                                     np.mean(np.array(self.energies))**2 ) )/self.length
 
         return 0
 
