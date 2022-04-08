@@ -6,10 +6,11 @@ Simulation class of a 2D Ising Model via Monte Carlo integration.
 
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 class IsingModel:
 
-    def __init__(self, temperature, length=50, init_type='up', equilibrate_steps=200):
+    def __init__(self, temperature, length=50, init_type='up', equilibrate_steps=200, external_field = 0.0):
         """
         Constructor of the Ising Model class.
 
@@ -21,16 +22,21 @@ class IsingModel:
         self.temperature = temperature
         self.length = int(length)
         self.initialize_state(init_type=init_type)
+        self.external_field = external_field
 
         self.magnetizations = []
         self.energies = []
         self.susceptibilities = []
         self.specific_heats = []
         
-        self.p_4J = self.probability(4)
-        self.p_8J = self.probability(8)
+        self.p_4J_m2H = self.probability(abs(4-2*external_field))
+        self.p_8J_m2H = self.probability(abs(8-2*external_field))
+        self.p_4J_p2H = self.probability(abs(4+2*external_field))
+        self.p_8J_p2H = self.probability(abs(8+2*external_field))
+        self.p_p2H = self.probability(abs(2*external_field))
+        
 
-        self.equilibrate(equilibrate_steps)
+        #self.equilibrate(equilibrate_steps)
 
     def initialize_state(self, init_type):
         """
@@ -127,17 +133,24 @@ class IsingModel:
         self.measure_corr_time(t_max, plot)
 
         tau = min(200, self.tau)
+        t_box = int(16*tau)
+        num_boxes_done = math.floor(t_max/t_box) #how many blocks do we have already
+        num_boxes_needed = num_boxes - num_boxes_done
+        N = int(max(0, t_box - t_max)) #how much steps to round the next block
 
-        N = max(0, 16*tau - t_max)
-        N = int(N)
-        self.simulate(N, plot=False)
-        self.susceptibilities.append(self.susceptibility(self.magnetizations))
-        self.specific_heats.append(self.specific_heat(self.energies))
+        for i in range(num_boxes_done):
+            start = int((i)*t_box)
+            stop = int((i +1)*t_box)
+            self.susceptibilities.append(self.susceptibility(self.magnetizations[start:stop]))
+            self.specific_heats.append(self.specific_heat(self.energies[start:stop]))
 
-        for i in range(num_boxes - 1):
-            self.simulate(int(16*tau), plot=False)
-            self.susceptibilities.append(self.susceptibility(self.magnetizations[-int(16*tau):]))
-            self.specific_heats.append(self.specific_heat(self.energies[-int(16*tau):]))
+        if num_boxes_needed>0:
+            self.simulate(N, plot=False)
+            for i in range(num_boxes_needed):
+                self.simulate(t_box, plot=False)
+                self.susceptibilities.append(self.susceptibility(self.magnetizations[-t_box:]))
+                self.specific_heats.append(self.specific_heat(self.energies[-t_box:]))
+
 
         self.final_susceptibility = np.mean(self.susceptibilities)
         self.final_specific_heat = np.mean(self.specific_heats)
@@ -148,10 +161,10 @@ class IsingModel:
                                                      np.mean(np.array(self.susceptibilities))**2 ) )
         self.final_specific_heat_sigma = np.sqrt( ( np.mean(np.array(self.specific_heats)**2) -
                                                      np.mean(np.array(self.specific_heats))**2 ) )
-        self.final_magnetization_sigma = np.sqrt( 2*tau/(t_max + N + (num_boxes - 1)*16*tau) *
-                                                   ( np.mean(np.array(self.magnetizations)**2) -
-                                                     np.mean(np.array(self.magnetizations))**2 ) )
-        self.final_energy_sigma = np.sqrt( 2*tau/(t_max + N + (num_boxes - 1)*16*tau) *
+        self.final_magnetization_sigma = np.sqrt( 2*tau/(t_max + N + (num_boxes_needed)*16*tau) *
+                                                   ( np.mean(np.absolute(self.magnetizations)**2) -
+                                                     np.mean(np.absolute(self.magnetizations))**2 ) )
+        self.final_energy_sigma = np.sqrt( 2*tau/(t_max + N + (num_boxes_needed)*16*tau) *
                                                    ( np.mean(np.array(self.energies)**2) -
                                                      np.mean(np.array(self.energies))**2 ) )/self.length
 
@@ -187,7 +200,7 @@ class IsingModel:
         
         dE = (self.state[flip_spin_x, (flip_spin_y+1)%self.length] + self.state[flip_spin_x, (flip_spin_y-1)%self.length]\
              + self.state[(flip_spin_x+1)%self.length, flip_spin_y] + self.state[(flip_spin_x-1)%self.length, flip_spin_y])\
-             * self.state[flip_spin_x, flip_spin_y]
+             * self.state[flip_spin_x, flip_spin_y] + self.external_field*new_state[flip_spin_x, flip_spin_y]
         #print(dE)
         new_state[flip_spin_x, flip_spin_y] *= -1
         
@@ -209,6 +222,8 @@ class IsingModel:
                 energy -= state[i, j]*(state[i, (j+1)%self.length] + state[i, (j-1)%self.length])
                 # top and bottom neighbor
                 energy -= state[i, j]*(state[(i+1)%self.length, j] + state[(i-1)%self.length, j])
+                energy -=  2* self.external_field*state[i,j]
+                
 
         energy *= 0.5
 
@@ -249,12 +264,18 @@ class IsingModel:
             #self.energies.append(new_state_energy)
             #print("tried")
         else:
-            if (abs(dE-4.00)<10e-8):
-                p = self.p_8J
+            if (abs(dE-abs(4.00-self.external_field))<10e-8):
+                p = self.p_8J_m2H
+                #print(p)
+            elif (abs(dE-abs(2.00-self.external_field))<10e-8):
+                p = self.p_4J_m2H
+            elif (abs(dE-abs(4.00+self.external_field))<10e-8):
+                p = self.p_8J_p2H
+            elif (abs(dE-abs(2.00+self.external_field))<10e-8):
+                p = self.p_4J_p2H
                 #print(p)
             else:
-                p = self.p_4J
-                #print(p)
+                p = self.p_p2H
             t = np.random.random()
             if (t<p): # accept the new state
                 self.state = new_state
