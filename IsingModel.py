@@ -14,10 +14,11 @@ class IsingModel:
         """
         Constructor of the Ising Model class.
 
-        :param temperature: Dimensionless temperature in units of the coupling constant J.
-        :param length: Number of spins in the 1D chain. The grid will be of dimension length^2.
-        :param init_type: From {'up', 'down', 'random'}. Type of the initialization of the 2D spin grid.
-        :param equilibrate_steps: Number of weeps to equilibrate the system.
+        :param temperature: (float) Dimensionless temperature in units of the coupling constant J.
+        :param length: (int) Number of spins in the 1D chain. The grid will be of dimension length^2.
+        :param init_type: (from {'up', 'down', 'random'}, optional) Type of the initialization of the 2D spin grid, default value 'up'.
+        :param equilibrate_steps:(int, optional) Number of sweeps made to equilibrate the system during initialization, default value 200.
+        :param external_field:(float, optional) Adds external magnetic field H to the system, defaul value 0.0.
         """
         self.temperature = temperature
         self.length = int(length)
@@ -36,14 +37,14 @@ class IsingModel:
         self.p_p2H = self.probability(abs(2*external_field))
         
 
-        #self.equilibrate(equilibrate_steps)
+        self.equilibrate(equilibrate_steps)
 
     def initialize_state(self, init_type):
         """
-        Initialize a grid of -1 (down) or 1 (up) in the order specified by init_type.
+        Initialize a grid of -1 (down) or 1 (up) in the order specified by init_type. Here 'up' means all spins = 1, 'down' means all spins = -1, 'random' random choice of +-1 for each spin. As for 'close_to_opt' means that, depending on the expected magnetization (Onsager formula), a certain number of random spins is switched from 1 to -1.
 
-        :param init_type: From {'up', 'down', 'random'}, where up means all spins = 1, down = -1, and random random.
-        :return: 0 if successfull
+        :param init_type: (from {'up', 'down', 'random'}) Type of initial state. 
+        :return: 0 if successful
         """
 
         self.state = np.ones((self.length, self.length), dtype=int)
@@ -54,12 +55,11 @@ class IsingModel:
             self.state *= -1
             return 0
         elif init_type == "close_to_opt":
-            # theoretical expected amount of ups to be flipped for perfect magnetization
+            # theoretical expected amount of ups to be flipped for expected magnetization of the system
             if self.temperature < 2.369:
                 N = int(((1 - (1 - self.temperature/2.369)**(1/8))/2) * self.length**2)
             else:
                 N = int(self.length**2/2)
-            print(N/self.length**2)
             for i in range(N):
                 flip_spin_x = np.random.randint(0, self.length)
                 flip_spin_y = np.random.randint(0, self.length)
@@ -70,34 +70,31 @@ class IsingModel:
             for i in range(self.length):
                 for j in range(self.length):
                     self.state[i, j] = order[self.length*i + j]
-            #self.plot_state()
-            return 0
-        elif init_type == 'half-up-half-down':
-            for i in range(self.length):
-                for j in range(self.length/2):
-                    self.state[i,j] *= -1
             return 0
         else: 
             print("This initial state is not known.")
 
     def equilibrate(self, equilibrate_steps):
         """
-
-        :param equilibrate_steps:
+        Equilibration of the system for a given number of sweeps, magnetizations and energies are not saved during this procedure.
+        
+        :param equilibrate_steps: (int) Number of sweeps to equilibrate the system.
         :return: 0 if successful
         """
         for i in range(equilibrate_steps):
             self.simulation_unit(save=False)
         return 0
 
-    def measure_corr_time(self, t_max, plot=False):
+    def measure_corr_time(self, t_max, plot=False, save_magnetizations=False):
         """
-
-        :param t_max:
-        :return:
+        Evolves the system for t_max sweeps and from attained magnetizations calculates the approximate correlation time of the system.
+        
+        :param t_max: number of sweeps made in total
+        :param plot: (True/False, optional) allows/disallowes plotting of the integrated function chi(t)/chi(0), default value is False
+        :param save_magnetizations: (True/False, optional) Allowing/disallowing saving of magnetizations into a file, default value False.
+        :return:  0 if successful
         """
-        for t in range(t_max):
-            self.simulation_unit()
+        self.simulate(t_max,plot=False, save=save_magnetizations)
 
         chi = np.zeros(t_max)
         for t in range(t_max):
@@ -126,16 +123,23 @@ class IsingModel:
 
         return 0
 
-    def measure_stat_prop(self, t_max, num_boxes, plot=False):
+    def measure_stat_prop(self, t_max, num_boxes, plot=False, save_magnetizations=False):
         """
-        :return:
+        First measures correlation time of the system, then determines the size of independent measurement blocks. Splits simulated data from correlation time measurement into measurement blocks and calculated corresponding susceptibilities and specific heats. If the number of optained measurements is smaller then num_boxes (minimum required), then additional block are simulated and measured.
+        Mean and error of magnetization and energy is then calculated from all measurements done. Susceptibility and specific heat mean and error is calculated from independent block measurements.
+        
+        :param t_max: (int) Number of sweeps to measure correlation time.
+        :param num_boxes: (int) Minimal number of measurement blocks to be performed.
+        :param plot: (True/False, optional) Allows/disallows plotting during measuring of the correlation time, default value False.
+        :param save_magnetizations: (True/False, optional) Allowing/disallowing saving of magnetizations into a file, default value False.
+        :return: 0 if successful
         """
-        self.measure_corr_time(t_max, plot)
+        self.measure_corr_time(t_max, plot, save_magnetizations)
 
         tau = min(200, self.tau)
         t_box = int(16*tau)
         num_boxes_done = math.floor(t_max/t_box) #how many blocks do we have already
-        num_boxes_needed = num_boxes - num_boxes_done
+        num_boxes_needed = num_boxes - num_boxes_done #how many blocks need to be additionaly measured
         N = int(max(0, t_box - t_max)) #how much steps to round the next block
 
         for i in range(num_boxes_done):
@@ -151,12 +155,13 @@ class IsingModel:
                 self.susceptibilities.append(self.susceptibility(self.magnetizations[-t_box:]))
                 self.specific_heats.append(self.specific_heat(self.energies[-t_box:]))
 
-
+        #means calculation
         self.final_susceptibility = np.mean(self.susceptibilities)
         self.final_specific_heat = np.mean(self.specific_heats)
         self.final_magnetization = np.mean(np.absolute(self.magnetizations))
         self.final_energy = np.mean(self.energies)/self.length**2
-
+        
+        #errors calculation
         self.final_susceptibility_sigma = np.sqrt( ( np.mean(np.array(self.susceptibilities)**2) -
                                                      np.mean(np.array(self.susceptibilities))**2 ) )
         self.final_specific_heat_sigma = np.sqrt( ( np.mean(np.array(self.specific_heats)**2) -
@@ -170,28 +175,31 @@ class IsingModel:
 
         return 0
 
-    def susceptibility(self, m):
+    def susceptibility(self, magnetizations):
         """
+        Calculates susceptibility from a given list of measured magnetizations.
 
-        :param m:
-        :return:
+        :param magnetizations: (list of floats) List of average magnetizations per spin from a given measurement block.
+        :return: Susceptibility.
         """
+        susceptibility = 1/self.temperature * (np.mean(np.array(magnetizations)**2) - np.mean(np.array(magnetizations))**2) *self.length**2
+        return susceptibility
 
-        return 1/self.temperature * (np.mean(np.array(m)**2) - np.mean(np.array(m))**2) *self.length**2
-
-    def specific_heat(self, E):
+    def specific_heat(self, energies):
         """
+        Calculates specific heat from a given list of measured total energies.
 
-        :param E:
-        :return:
+        :param E: (list of floats) List of total energies of the system from a given measurement block
+        :return: Specific heat as a float.
         """
-        return 1/(self.length**2 * self.temperature**2) * (np.mean(np.array(E)**2) - np.mean(np.array(E))**2)
+        C = 1/(self.length**2 * self.temperature**2) * (np.mean(np.array(energies)**2) - np.mean(np.array(energies))**2)
+        return C
 
     def new_state(self):
         """
-        Creates out of the current state a new one via flipping a random spin.
+        Creates a new state out of the current state via flipping randomly chosen spin and half of the energy difference of the system caused by the flip.
 
-        :return: New state.
+        :return: New state, half of the corresponding change in total energy of the system.
         """
         flip_spin_x = np.random.randint(0, self.length)
         flip_spin_y = np.random.randint(0, self.length)
@@ -201,7 +209,7 @@ class IsingModel:
         dE = (self.state[flip_spin_x, (flip_spin_y+1)%self.length] + self.state[flip_spin_x, (flip_spin_y-1)%self.length]\
              + self.state[(flip_spin_x+1)%self.length, flip_spin_y] + self.state[(flip_spin_x-1)%self.length, flip_spin_y])\
              * self.state[flip_spin_x, flip_spin_y] + self.external_field*new_state[flip_spin_x, flip_spin_y]
-        #print(dE)
+
         new_state[flip_spin_x, flip_spin_y] *= -1
         
 
@@ -211,7 +219,7 @@ class IsingModel:
         """
         Calculates the energy (Ising hamiltonian) of the state in dimensionless units J/(k_B T).
 
-        :param state: State, whose energy should be calculated (2D grid).
+        :param state: (state of the system - 2D grid) State, whose energy should be calculated.
         :return: Energy as a float.
         """
 
@@ -231,9 +239,9 @@ class IsingModel:
 
     def probability(self, energy):
         """
-        Calculates the probability of a state in the Ising system.
+        Calculates the probability of accepting new state of the Ising system for a given total energy difference caused by this change.
 
-        :param state: State, whose energy should be calculated (2D grid).
+        :param energy: (float) Energy difference (energy of the current state of the system - energy of the proposed state).
         :return: Probability as float.
         """
 
@@ -241,7 +249,7 @@ class IsingModel:
 
     def magnetization(self):
         """
-        Measures the normed magnetization of the current state.
+        Measures the average spin (magnetization) of the current state of the system.
 
         :return: Magnetization as float.
         """
@@ -252,18 +260,16 @@ class IsingModel:
 
     def evolve(self):
         """
-
-        :return:
+        Draws new state by flipping randomly chosen spin and depending on the change of the total energy of the system accepts the new state with a given probability.
+        
+        :return: 0 if successful.
         """
         new_state , dE = self.new_state()
-        #new_state_energy = self.energies[-1]+2*dE
 
-        if dE<=0:
-            #print("right away")
+        if dE<=0: #energy is lowering/staying the same -> automaticaly accept new state
             self.state = new_state
-            #self.energies.append(new_state_energy)
-            #print("tried")
-        else:
+
+        else: #accepting the state depending on the energy difference if the new energy is bigger
             if (abs(dE-abs(4.00-self.external_field))<10e-8):
                 p = self.p_8J_m2H
                 #print(p)
@@ -273,23 +279,21 @@ class IsingModel:
                 p = self.p_8J_p2H
             elif (abs(dE-abs(2.00+self.external_field))<10e-8):
                 p = self.p_4J_p2H
-                #print(p)
             else:
                 p = self.p_p2H
+                
             t = np.random.random()
             if (t<p): # accept the new state
                 self.state = new_state
-                #self.energies.append(new_state_energy)
-                #print("accepted")
-
-            
 
         return 0
 
     def simulation_unit(self, save=True):
         """
+        Does one sweep through the lattice, i. e. tries to swap a random spin and evolve the system self.lenght**2 times (to give every spin a chance to flip).
 
-        :return:
+        :param save: (True/False, optional) Gives an option to turn off (False) measuring of energy and magnetization after every sweep, default value True.   
+        :return: 0 if successful
         """
         for i in range(self.length**2):
             self.evolve()
@@ -300,22 +304,31 @@ class IsingModel:
 
         return 0
 
-    def simulate(self, num_repetitions, plot=True):
+    def simulate(self, num_repetitions, plot=True, save=True):
         """
-
-        :param num_repetitions:
-        :return:
+        Does num_repetitions of sweeps through the lattice and saves the magnetizations into a file.
+        
+        :param num_repetitions: Number of sweeps to be done.
+        :param plot: (True/False, optional) Allowing/disallowing the plotting of magnetizations, default value True.
+        :param save: (True/False, optional) Allowing/disallowing saving of magnetizations into a file, default value True.
+        :return: 0 if successful
         """
         for i in range(num_repetitions):
             self.simulation_unit()
-
-        self.save_magnetization()
+        
+        if (save==True):
+            self.save_magnetization()
         if (plot == True):
             self.plot_magnetization()
 
         return 0
 
     def plot_magnetization(self):
+        """
+        Plots average magnetizations per spin of the system saved so far.
+
+        :return: 0 if successful
+        """
         fig, ax = plt.subplots()
 
         x_range = range(len(self.magnetizations))
@@ -329,15 +342,18 @@ class IsingModel:
         ax.set_title("Result Measurements Markov Chain", fontsize=20)
 
         plt.show()
+        
+        return 0
 
     def save_magnetization(self):
         """
+        Saves magnetizations measured so far into an txt file of automatically generated name.
 
-        :return:
+        :return: 0 if successful
         """
         num_repetitions = len(self.magnetizations)
         name_of_file = "magn_" + str(self.temperature).replace(".", "") + "_size_" + str(int(self.length)) + ".txt"
-        with open(name_of_file, "w") as file:
+        with open(name_of_file, "a") as file:
             file.write("%f %d %d\n" % (self.temperature, num_repetitions, self.length))
             for i in range(num_repetitions):
                 file.write("%f " % self.magnetizations[i])
@@ -347,8 +363,9 @@ class IsingModel:
 
     def plot_energies(self):
         """
+        Plots total energies of the system measured so far.
 
-        :return:
+        :return: 0 if successful
         """
         fig, ax = plt.subplots()
 
@@ -363,15 +380,19 @@ class IsingModel:
         ax.set_title("Result Measurements Markov Chain", fontsize=20)
 
         plt.show()
+        
+        return 0
 
     def plot_state(self):
         """
+        Plots the current state of the system (values of spins in the lattice) using imshow.
 
-        :return:
+        :return: 0 if successful
         """
         fig, ax = plt.subplots()
         ax.imshow(self.state)
         plt.show()
+        
         return 0
         
         

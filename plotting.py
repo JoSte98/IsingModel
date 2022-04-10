@@ -1,28 +1,42 @@
 """
+External plotting and saving to a file functions for simulated statistical properties.
 
+@author: Magdalena and Johannes
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_phase_diagram(name_of_file):
+def load_property_from_file(name_of_file):
     """
-
-    :param name_of_file:
-    :return:
+    Loads temperatures, means and errors of a given property (magnetization/energy/susceptibility/specific heat) from a file.
+    
+    :param name_of_file: Name of the file from which values are loaded.
+    :return: Lists of temperatures, mean values, errors
     """
     temperatures = []
-    magnetizations = []
+    means = []
     sigmas = []
     with open(name_of_file, "r") as file:
         lines = file.read().split('\n')
         del lines[-1]
 
         for line in lines:
-            T, m, sigma = line.split(" ")
+            T, mean, sigma = line.split(" ")
             temperatures.append(float(T))
-            magnetizations.append(float(m))
+            means.append(float(mean))
             sigmas.append(float(sigma))
+    
+    return temperatures, means, sigmas
+
+def plot_phase_diagram(name_of_file):
+    """
+    Plots phase diagram (magnetizations for different temperatures) of the system from values saved in a file.
+
+    :param name_of_file: Name of the file from which values are loaded.
+    :return: 0 if successful
+    """
+    temperatures, magnetizations, sigmas = load_property_from_file(name_of_file)
 
     fig, ax = plt.subplots()
 
@@ -41,13 +55,16 @@ def plot_phase_diagram(name_of_file):
     ax.legend(loc="best", fontsize=16)
 
     plt.show()
+    
+    return 0
 
 def plot_temp_corr_time(name_of_file):
     """
+    Plots correlation time of the system for different temperatures from values saved in a file.
 
-        :param name_of_file:
-        :return:
-        """
+    :param name_of_file: Name of the file from which values are loaded.
+    :return: 0 if successful
+    """
     temperatures = []
     taus = []
     with open(name_of_file, "r") as file:
@@ -71,29 +88,21 @@ def plot_temp_corr_time(name_of_file):
     ax.grid(visible=True)
 
     plt.show()
+    
+    return 0
 
 def plot_temp_susceptibility(name_of_file):
     """
+    Plots susceptibility of the system for different temperatures from values saved in a file.
 
-        :param name_of_file:
-        :return:
-        """
-    temperatures = []
-    chis = []
-    sigmas = []
-    with open(name_of_file, "r") as file:
-        lines = file.read().split('\n')
-        del lines[-1]
-
-        for line in lines:
-            T, chi, sigma = line.split(" ")
-            temperatures.append(float(T))
-            chis.append(float(chi))
-            sigmas.append(float(sigma))
+    :param name_of_file: Name of the file from which values are loaded.
+    :return: 0 if successful
+    """
+    temperatures, susceptibilities, sigmas = load_property_from_file(name_of_file)
 
     fig, ax = plt.subplots()
 
-    ax.errorbar(temperatures, sigmas, yerr=sigmas, fmt='ro', label="Measurement")
+    ax.errorbar(temperatures, susceptibilities, yerr=sigmas, fmt='ro', label="Measurement")
 
     ax.set_xlim((0.0, temperatures[-1] + 0.2))
     ax.set_xlabel(r"Temperature $\frac{k_B T}{J}$", fontsize=18)
@@ -103,29 +112,21 @@ def plot_temp_susceptibility(name_of_file):
     ax.grid(visible=True)
 
     plt.show()
+    
+    return 0
 
 def plot_temp_specific_heat(name_of_file):
     """
+    Plots specific heat of the system for different temperatures from values saved in a file.
 
-        :param name_of_file:
-        :return:
-        """
-    temperatures = []
-    Cs = []
-    sigmas = []
-    with open(name_of_file, "r") as file:
-        lines = file.read().split('\n')
-        del lines[-1]
-
-        for line in lines:
-            T, C, sigma = line.split(" ")
-            temperatures.append(float(T))
-            Cs.append(float(C))
-            sigmas.append(float(sigma))
+    :param name_of_file: Name of the file from which values are loaded.
+    :return: 0 if successful
+    """
+    temperatures, heats, sigmas = load_property_from_file(name_of_file)
 
     fig, ax = plt.subplots()
 
-    ax.errorbar(temperatures, Cs, yerr=sigmas, fmt='ro', label="Measurement")
+    ax.errorbar(temperatures, heats, yerr=sigmas, fmt='ro', label="Measurement")
 
     ax.set_xlim((0.0, temperatures[-1] + 0.2))
     ax.set_xlabel(r"Temperature $\frac{k_B T}{J}$", fontsize=18)
@@ -135,29 +136,21 @@ def plot_temp_specific_heat(name_of_file):
     ax.grid(visible=True)
 
     plt.show()
+    
+    return 0
 
 def plot_temp_energy(name_of_file):
     """
+    Plots energy per spin of the system for different temperatures from values saved in a file.
 
-        :param name_of_file:
-        :return:
-        """
-    temperatures = []
-    es = []
-    sigmas = []
-    with open(name_of_file, "r") as file:
-        lines = file.read().split('\n')
-        del lines[-1]
-
-        for line in lines:
-            T, e, sigma = line.split(" ")
-            temperatures.append(float(T))
-            es.append(float(e))
-            sigmas.append(float(sigma))
+    :param name_of_file: Name of the file from which values are loaded.
+    :return: 0 if successful
+    """
+    temperatures, energies, sigmas = load_property_from_file(name_of_file)
 
     fig, ax = plt.subplots()
 
-    ax.errorbar(temperatures, es, yerr=sigmas, fmt='ro', label="Measurement")
+    ax.errorbar(temperatures, energies, yerr=sigmas, fmt='ro', label="Measurement")
 
     ax.set_xlim((0.0, temperatures[-1] + 0.2))
     ax.set_xlabel(r"Temperature $\frac{k_B T}{J}$", fontsize=18)
@@ -167,63 +160,36 @@ def plot_temp_energy(name_of_file):
     ax.grid(visible=True)
 
     plt.show()
+    
+    return 0
 
-def save_temp_magn(T, m, sigma, name_of_file):
+
+def save_temp_corr_time(temperature, tau, name_of_file):
     """
+    Saves correlation time tau of the system together with the temperature in a file. Saving style: 'temperature tau'.
 
-    :param T:
-    :param m:
-    :return:
+    :param temperature:(float) Temperature of the system.
+    :param tau: (float) Correlation time of the system.
+    :param name_of_file: (string) Name of the file in which the values are saved.
+    :return: 0 if successful
     """
     with open(name_of_file, "a") as file:
-        file.write("%f %f %f\n" % (T, m, sigma))
+        file.write("%f %f\n" % (temperature, tau))
 
     return 0
 
-def save_temp_corr_time(T, tau, name_of_file):
+def save_temp_property(temperature, mean, sigma, name_of_file):
     """
+    Saves measured mean and error of the given property of the system together with the temperature of the system into a file.
+    Saving style: 'temperature mean error'.
 
-    :param T:
-    :param tau:
-    :return:
-    """
-    with open(name_of_file, "a") as file:
-        file.write("%f %f\n" % (T, tau))
-
-    return 0
-
-def save_temp_susceptibility(T, chi, sigma, name_of_file):
-    """
-
-    :param T:
-    :param chi:
-    :return:
+    :param temperature: (float) Temperature of the system.
+    :param mean: (float) Calculated mean value of the given property of the system (magnetization/energy/susceptibility/specific heat).
+    :param sigma: (float) Calculated error of a given property of the system.
+    :param name_of_file: (string) Name of the file in which the values are saved.
+    :return: 0 if successful
     """
     with open(name_of_file, "a") as file:
-        file.write("%f %f %f\n" % (T, chi, sigma))
-
-    return 0
-
-def save_temp_specific_heat(T, C, sigma, name_of_file):
-    """
-
-    :param T:
-    :param C:
-    :return:
-    """
-    with open(name_of_file, "a") as file:
-        file.write("%f %f %f\n" % (T, C, sigma))
-
-    return 0
-
-def save_temp_energy(T, e, sigma, name_of_file):
-    """
-
-    :param T:
-    :param e:
-    :return:
-    """
-    with open(name_of_file, "a") as file:
-        file.write("%f %f %f\n" % (T, e, sigma))
+        file.write("%f %f %f\n" % (temperature, mean, sigma))
 
     return 0
