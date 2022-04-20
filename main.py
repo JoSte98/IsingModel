@@ -5,6 +5,8 @@ import numpy as np
 
 from plotting import *
 from IsingModel import IsingModel
+import matplotlib.patches as mpatches
+
 
 NAME_PHASE_FILE = "phase_points.txt"
 NAME_CORR_FILE = "correlation_time.txt"
@@ -34,9 +36,6 @@ def main():
     plot_temp_energy(NAME_ENERGY_FILE)
     plot_temp_specific_heat(NAME_SPECIFIC_HEAT_FILE)
     plot_temp_susceptibility(NAME_SUSCEPTIBILITY_FILE)
-    """model = IsingModel(temperature=1.5, length=20, init_type='random',external_field=0.5)
-    model.simulate(800)
-    model.plot_energies()"""
 
     return 0
 

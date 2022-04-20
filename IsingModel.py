@@ -7,6 +7,7 @@ Simulation class of a 2D Ising Model via Monte Carlo integration.
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import matplotlib.patches as mpatches
 
 class IsingModel:
 
@@ -149,9 +150,9 @@ class IsingModel:
             self.specific_heats.append(self.specific_heat(self.energies[start:stop]))
 
         if num_boxes_needed>0:
-            self.simulate(N, plot=False)
+            self.simulate(N, plot=False,save=save_magnetizations)
             for i in range(num_boxes_needed):
-                self.simulate(t_box, plot=False)
+                self.simulate(t_box, plot=False,save=save_magnetizations)
                 self.susceptibilities.append(self.susceptibility(self.magnetizations[-t_box:]))
                 self.specific_heats.append(self.specific_heat(self.energies[-t_box:]))
 
@@ -390,7 +391,14 @@ class IsingModel:
         :return: 0 if successful
         """
         fig, ax = plt.subplots()
-        ax.imshow(self.state)
+        im = ax.imshow(self.state)
+        ax.set_title('Current configuration of the system')
+        colors = [ im.cmap(im.norm(1)),im.cmap(im.norm(-1))]
+        # create a patch (proxy artist) for every color 
+        patches = [ mpatches.Patch(color=colors[0], label="up"),mpatches.Patch(color=colors[1], label="down")]
+        # put those patched as legend-handles into the legend
+        plt.legend(handles=patches, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0. )
+
         plt.show()
         
         return 0
