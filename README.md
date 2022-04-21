@@ -10,12 +10,25 @@ statictical properties and correlation time graphs. Here we give some basic over
 what other examples can be found in the main.py file.
 
 ## Simulation
+The basis of every simulation would be the creation of an object of class IsingModel with specified temperature and the size of the lattice. 
+After that, one can run a simulation of the system for a specified number of sweeps t via object.simulate(t). This function would also automaticaly
+save to a file and plot the magnetizations and energies of the system collected during the simulation, these can be disablet via setting optional 
+parameters save=False and plot=False. These properties then can also be plotted additionaly after simulation via object.plot_magnetizations() and 
+object.plot_energies().
 
+Note: The system automatically initialize in the configuration 'up' meaning all spins are +1, there is a few other options which can be accessed via 
+the optional parameter 'init_type' during the creation of the object. To see pre-programed initial states check docstrings.
 
-
+Example: Example of creation of an class object and simulation with automatic saving and plotting can be found in the main.py file.
 
 ## Simulating statistical properties
 
+
+Example: Detailed example of this is the main part of the pre-prepared main.py file. It measures statistical properties for a range of temperatures, 
+saves results in the files - NAME_PHASE_FILE (magnetizations), NAME_CORR_FILE(correlation times), NAME_ENERGY_FILE (energies), NAME_SPECIFIC_HEAT_FILE(specific heats),
+NAME_SUSCEPTIBILITY_FILE (magnetic susceptibilities) - and then plots them.
+
+## Adding external magnetic field
 
 
 ## Plotting configurations of the system
