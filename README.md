@@ -17,19 +17,25 @@ parameters save=False and plot=False. These properties then can also be plotted 
 object.plot_energies().
 
 Note: The system automatically initialize in the configuration 'up' meaning all spins are +1, there is a few other options which can be accessed via 
-the optional parameter 'init_type' during the creation of the object. To see pre-programed initial states check docstrings.
+the optional parameter 'init_type' during the creation of the object. To see pre-programed initial states check the docstrings.
 
 Example: Example of creation of an class object and simulation with automatic saving and plotting can be found in the main.py file.
 
 ## Simulating statistical properties
+To measure statistical properties using minimal number of measurrement blocks N one is to use oject.measure_stat_prop(t,N), where t is the nimber of 
+sweeps during which we measure correlation time of the system. The measured properties are then stored as object.final_magnetization, object.final_energy,
+object.final_susceptibility, object.final_specific_heat. If we ad _sigma to the end of previously named variables, we get stored errors of this properties.
+These measured values then can be saved to a file via external plotting functions (see section 'Plotting functions'). 
 
+Note: As for optional parameters, if we want to enable saving of all measured magnetizations and energies to a file, change 'save' to True.
 
 Example: Detailed example of this is the main part of the pre-prepared main.py file. It measures statistical properties for a range of temperatures, 
 saves results in the files - NAME_PHASE_FILE (magnetizations), NAME_CORR_FILE(correlation times), NAME_ENERGY_FILE (energies), NAME_SPECIFIC_HEAT_FILE(specific heats),
 NAME_SUSCEPTIBILITY_FILE (magnetic susceptibilities) - and then plots them.
 
 ## Adding external magnetic field
-
+External magnetic field H can be added to the simulation during initialization of the IsingModel object via optional parameter 'external_field'. 
+It is defaultly set to 0.0, but for the sake of clarity we have explicitly initialized it to 0.0 once more in the main.py file to make the example more clear.
 
 ## Plotting configurations of the system
 
