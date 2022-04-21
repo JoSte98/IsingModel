@@ -49,7 +49,7 @@ save_temp_property(temperature, mean, error, name_of_file) we can save any of th
 NAME_PHASE_FILE, NAME_ENERGY_FILE, NAME_SPECIFIC_HEAT_FILE, NAME_CORR_FILE) as the trio of numbers (temperature, mean, error). From this file they then can be loaded 
 and plotted for all temperatures (all values for different temperatures saved so far) using functions plot_phase_diagram(NAME_PHASE_FILE), plot_temp_energy(NAME_ENERGY_FILE), 
 plot_temp_specific_heat(NAME_SPECIFIC_HEAT_FILE), plot_temp_susceptibility(NAME_SUSCEPTIBILITY_FILE).
-Since the correlation time $\tau$ does not have an error value, it is due to its different format saved using the function save_temp_corr_time(temperature, tau, name_of_file).
+Since the correlation time tau does not have an error value, it is due to its different format saved using the function save_temp_corr_time(temperature, tau, name_of_file).
 From this file it can then be plotted using plot_temp_corr_time(NAME_CORR_FILE)
 
 Example: In the main.py file the default example contains exactly this saving to file and then plotting of the measured properties for all measured temperatures.
