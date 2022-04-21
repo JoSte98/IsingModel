@@ -35,7 +35,7 @@ def main():
         save_temp_property(T, model.final_susceptibility, model.final_susceptibility_sigma, NAME_SUSCEPTIBILITY_FILE)
         save_temp_property(T, model.final_specific_heat, model.final_specific_heat_sigma, NAME_SPECIFIC_HEAT_FILE)
         
-##### Plotting of all collected data for given temperature range
+##### Plotting of all collected data for the given temperature range
 
     plot_temp_corr_time(NAME_CORR_FILE)
     plot_phase_diagram(NAME_PHASE_FILE)
