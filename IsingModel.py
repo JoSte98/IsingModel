@@ -310,7 +310,7 @@ class IsingModel:
         Does num_repetitions of sweeps through the lattice and saves the magnetizations into a file.
         
         :param num_repetitions: Number of sweeps to be done.
-        :param plot: (True/False, optional) Allowing/disallowing the plotting of magnetizations, default value True.
+        :param plot: (True/False, optional) Allowing/disallowing the plotting of magnetizations and energies, default value True.
         :param save: (True/False, optional) Allowing/disallowing saving of magnetizations into a file, default value True.
         :return: 0 if successful
         """
@@ -321,6 +321,7 @@ class IsingModel:
             self.save_magnetization()
         if (plot == True):
             self.plot_magnetization()
+            self.plot_energies()
 
         return 0
 

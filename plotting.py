@@ -48,11 +48,12 @@ def plot_phase_diagram(name_of_file):
     ax.plot(t_range_h, np.zeros(len(t_range_h)), lw=2.0, c="b")
 
     ax.set_xlim((0.0, temperatures[-1] + 0.2))
-    ax.set_xlabel(r"Temperature $\frac{k_B T}{J}$", fontsize=18)
+    ax.set_xlabel(r"Temperature $\tilde{T}$", fontsize=18)
     ax.set_ylabel(r"Magnetization per spin $\langle M\rangle$", fontsize=18)
     ax.grid(visible=True)
 
-    ax.legend(loc="best", fontsize=16)
+    ax.legend(loc="lower left", fontsize=16)
+    plt.tight_layout()
 
     plt.show()
     
@@ -81,10 +82,11 @@ def plot_temp_corr_time(name_of_file):
     ax.scatter(temperatures, taus, linewidths=1.5, c="r", label="Measurement")
 
     ax.set_xlim((0.0, temperatures[-1] + 0.2))
-    ax.set_xlabel(r"Temperature $\frac{k_B T}{J}$", fontsize=18)
+    ax.set_xlabel(r"Temperature $\tilde{T}$", fontsize=18)
     ax.set_ylabel(r"Correlation time $\tau$", fontsize=18)
 
-    ax.legend(loc="best", fontsize=16)
+    ax.legend(loc="upper left", fontsize=16)
+    plt.tight_layout()
     ax.grid(visible=True)
 
     plt.show()
@@ -105,11 +107,12 @@ def plot_temp_susceptibility(name_of_file):
     ax.errorbar(temperatures, susceptibilities, yerr=sigmas, fmt='ro', label="Measurement")
 
     ax.set_xlim((0.0, temperatures[-1] + 0.2))
-    ax.set_xlabel(r"Temperature $\frac{k_B T}{J}$", fontsize=18)
+    ax.set_xlabel(r"Temperature $\tilde{T}$", fontsize=18)
     ax.set_ylabel(r"Magnetic susceptibility $\chi_M$", fontsize=18)
 
     ax.legend(loc="best", fontsize=16)
     ax.grid(visible=True)
+    plt.tight_layout()
 
     plt.show()
     
@@ -129,11 +132,12 @@ def plot_temp_specific_heat(name_of_file):
     ax.errorbar(temperatures, heats, yerr=sigmas, fmt='ro', label="Measurement")
 
     ax.set_xlim((0.0, temperatures[-1] + 0.2))
-    ax.set_xlabel(r"Temperature $\frac{k_B T}{J}$", fontsize=18)
+    ax.set_xlabel(r"Temperature $\tilde{T}$", fontsize=18)
     ax.set_ylabel(r"Specific heat $C$", fontsize=18)
 
     ax.legend(loc="best", fontsize=16)
     ax.grid(visible=True)
+    plt.tight_layout()
 
     plt.show()
     
@@ -153,11 +157,12 @@ def plot_temp_energy(name_of_file):
     ax.errorbar(temperatures, energies, yerr=sigmas, fmt='ro', label="Measurement")
 
     ax.set_xlim((0.0, temperatures[-1] + 0.2))
-    ax.set_xlabel(r"Temperature $\frac{k_B T}{J}$", fontsize=18)
+    ax.set_xlabel(r"Temperature $\tilde{T}$", fontsize=18)
     ax.set_ylabel(r"Energy per spin $e$", fontsize=18)
 
     ax.legend(loc="best", fontsize=16)
     ax.grid(visible=True)
+    plt.tight_layout()
 
     plt.show()
     
